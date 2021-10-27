@@ -93,11 +93,16 @@ async function mintToSelf(){
     await window.m0.methods.mint(window.current_account, amount).send({from: window.current_account})
 }
 
+async function claim(){
+    await window.m0.methods.claim().send({from: window.current_account})
+}
+
 async function queryPending(){
     let result = await window.m0.methods.pendingReward(window.current_account).call()
     $("#epoch_reward").html(result.epochReward.toString())
-    $("#pending_acc_amount_time").html(result.accAmountTime.toString())
+    $("#pending_acc_amount_time").html(result.pendingAmountTime.toString())
 }
+
 
 async function sendM0(){
     let to = $("#transfer_to").val()
@@ -131,5 +136,11 @@ function binding(){
     $("#new_epoch").click(async ()=>{
         await startNewEpoch()
         window.location.reload()
+    })
+
+    $("#claim").click(async ()=>{
+        await claim()
+        refreshAccountInfo()
+        queryPending()
     })
 }
