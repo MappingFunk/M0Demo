@@ -81,8 +81,8 @@ async function refreshAccountInfo(){
         window.m0.methods.holderInfos(window.current_account).call()
     ]
     let results = await Promise.all(requests)
-    $("#reward_balance").html(results[0].toString())
-    $("#m0_balance").html(results[1].toString())
+    $("#reward_balance").html(results[0].toString() /  10**8)
+    $("#m0_balance").html(results[1].toString() / 10**6)
     $("#last_epoch").html(results[2].LastModifiedEpoch.toString())
     $("#last_time").html(results[2].LastModifiedTime.toString())
     $("#acc_amount_time").html(results[2].AccAmountTime.toString())
@@ -99,7 +99,7 @@ async function claim(){
 
 async function queryPending(){
     let result = await window.m0.methods.pendingReward(window.current_account).call()
-    $("#epoch_reward").html(result.epochReward.toString())
+    $("#epoch_reward").html(result.epochReward.toString() / 10**8)
     $("#pending_acc_amount_time").html(result.pendingAmountTime.toString())
 }
 
