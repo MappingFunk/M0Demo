@@ -60,7 +60,6 @@ async function updateEpoch() {
     }
     let results = await Promise.all(requests)
     //format data to display on front end
-    let formedResults = []
     for(let i=0; i< results.length; i++){
         let element = $('<li></li>')
         $("#epoch_list").append(element)
@@ -69,7 +68,7 @@ async function updateEpoch() {
             // '<p>Start:' + (new Date(results[i].StartTime *1000)).toString().replace(/GMT.*$/, "") + '</p>'
             '<p>Start:' + results[i].StartTime + '</p>'
             + '<p>Factor:' + results[i].RFactor + '</p>'
-            + '<p>Acc:' + results[i].accRewardSnapShot + '</p>'
+            + '<p>Acc:' + results[i].AccRewardSnapShot + '</p>'
         +'</div>'))
     }
 }
@@ -94,7 +93,7 @@ async function mintToSelf(){
 }
 
 async function claim(){
-    await window.m0.methods.claim().send({from: window.current_account})
+    await window.m0.methods.claim(window.current_account).send({from: window.current_account})
 }
 
 async function queryPending(){
@@ -111,8 +110,96 @@ async function sendM0(){
 }
 
 async function startNewEpoch(){
+    let currentEpoch = $("#current_number").val()
     let epochReward = $("#current_epoch_reward").val()
-    await window.m0.methods.startNewEpoch(epochReward).send({from: window.current_account})
+    await window.m0.methods.startNewEpoch(currentEpoch, epochReward).send({from: window.current_account})
+}
+
+async function fetch_data(url){
+    let raw = await fetch(url)
+    let data = await raw.json()
+    return data.data
+}
+
+
+async function query_dmo(){
+    let date_format = $("#select_date").val()
+    let date_array = date_format.split("-")
+    let date_tight = date_format.replace(/-/g, "")
+    if(date_tight.length == 0){
+        return
+    }
+    let base_url = "https://chain.api.btc.com/v3/block/date/"
+    //https://chain.api.btc.com/v3/block/date/20211128
+    let full_url = base_url + date_tight
+    let raw_blocks = await fetch_data(full_url)
+    $("#block_detail").html("")
+    raw_blocks.forEach(x=>{
+        let html = "<li>" +
+        " [height]: " + x.height+
+        " [timestamp]: " + x.timestamp+ 
+        " [difficulty]: " + x.difficulty +
+        " [reward_block]: " + x.reward_block +
+        " [reward_fees]: " + x.reward_fees +
+        "</li>"
+        $("#block_detail").append(html)
+    })
+    let day_start_utc = (new Date(Date.UTC(date_array[0],date_array[1]-1,date_array[2]))).getTime() / 1000
+    let analysis = blockAnalysis(raw_blocks, day_start_utc)
+    $("#periods").html("")
+    analysis.forEach(x=>{
+        let html = "<div>" + 
+        "<p>" + "period: " + x[0] + " ~ " + x[1] + "</p>" + 
+        "<p>" + "difficulty: " + x[2] + "</p>" + 
+        "<p>" + "ratio: " + x[3] * 100 + "%" + "</p>"
+        + "</div>" 
+        $("#periods").append(html)
+    })
+    let dmo = _calculateDMO(analysis)
+    $("#dmo_number").html(dmo)
+    $("#dmo_scaled").html(Math.floor(dmo * 10 **12))
+}
+
+function blockAnalysis(blocks, startTime){
+    let block_asc = blocks.reverse()
+    let current_difficulty = blocks[0].difficulty
+    let changed = false
+    let changed_index
+    for(let i in block_asc){
+        if(block_asc[i].difficulty != current_difficulty){
+            changed = true
+            changed_index = i
+            break
+        }
+    }
+    if(!changed){
+        return [_innerAnalysis(block_asc, startTime, startTime + 24 * 60 * 60)]
+    }else{
+        let time_split = block_asc[changed_index-1].timestamp
+        return [_innerAnalysis(block_asc.slice(0, changed_index), startTime, time_split),
+                _innerAnalysis(block_asc.slice(changed_index), time_split, startTime + 24 * 60 * 60)]
+    }
+}
+
+function _innerAnalysis(blocks, start, end){
+    let total_block_reward = blocks.map(x=>x.reward_block).reduce((a,b)=>a+b, 0)
+    let total_block_fees = blocks.map(x=>x.reward_fees).reduce((a,b)=>a+b, 0)
+    let period = end - start
+    //avg, ratio, time
+    return [start, end, blocks[0].difficulty, total_block_fees / total_block_reward, blocks[0].reward_block]
+}
+
+function _calculateDMO(analysises){
+    let dmo = 0
+    analysises.forEach(x=>{
+        let T = 1000 ** 4
+        let seconds = x[1] - x[0]
+        let difficulty = x[2]
+        let reward = x[4]
+        let ratio = x[3]
+        dmo += T * seconds * reward / difficulty / 2**32 * 0.96 // 4% pool fee 
+    })
+    return dmo
 }
 
 function binding(){
@@ -142,5 +229,9 @@ function binding(){
         await claim()
         refreshAccountInfo()
         queryPending()
+    })
+
+    $("#dmo_query").click(async ()=>{
+        await query_dmo()
     })
 }

@@ -21,7 +21,7 @@
         </ul>
       </div>
     </nav>
-  </body>
+  
 
   <div class="uk-text-center" uk-grid>
     <div class="uk-width-1-4">
@@ -62,10 +62,30 @@
           <button class="uk-button uk-button-default uk-button-primary" id="transfer_m0_btn">Send</button>
         </p>
         <p>
-          <input class="uk-input uk-width-1-2" id="current_epoch_reward" type="text" placeholder="Current Epoch Reward Per 10**12 Token"/>
+          <input class="uk-input uk-width-1-3" id="current_number" type="text" placeholder="Current Epoch Number"/>
+          <input class="uk-input uk-width-1-3" id="current_epoch_reward" type="text" placeholder="Current Epoch Reward Per 10**12 Token"/>
           <button class="uk-button uk-button-default uk-button-danger" id="new_epoch">Start New Epoch</button>
+          <p>WBTC: 0x77F2F420C7B9331Eb418a846062b1c53a64Ae882</p>
+          <p>MO: 0x9834b3f633d76765c0e995B6824456F1E0b83981</p>
+          <a href="https://app.uniswap.org/#/swap">Uniswap</a>
         </p>
       </div>
     </div>
   </div>
+  <hr class="uk-divider-icon">
+  <div class="uk-text-center">
+    <p><span class="uk-label uk-label-warning">DMO Calculator</span></p>
+    <p>
+      <input class="uk-input uk-width-1-6" id="select_date" type="date"/>
+      <button class="uk-button uk-button-default uk-button-primary" id="dmo_query">Query Date</button>
+      <p>DMO:<span id="dmo_number"></p>
+      <p></span>DMO Scaled (DMO* 10 **12):<span id="dmo_scaled"></span></p>
+      <div class="uk-child-width-expand@s uk-text-center" id="periods" uk-grid>
+    </div>
+      <ul class="uk-list uk-list-striped" id="block_detail">
+    </ul>
+    </p>
+  </div>
+  
+  </body>
 </html>
