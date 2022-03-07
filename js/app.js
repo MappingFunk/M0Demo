@@ -1,4 +1,5 @@
 import {reward_abi, reward_address, time_abi, time_address} from "./abi_address.js"
+import {uniswap_router_abi, uniswap_address} from "./abi_address.js"
 
 window.onload = async () => {
     window.app = {};
@@ -42,6 +43,7 @@ async function start() {
 
     window.reward = new web3.eth.Contract(reward_abi, reward_address)
     window.m0 = new web3.eth.Contract(time_abi, time_address)
+    window.router = new web3.eth.Contract(uniswap_router_abi, uniswap_address)
 
     updateEpoch()
     refreshAccountInfo()
@@ -84,7 +86,7 @@ async function refreshAccountInfo(){
     $("#m0_balance").html(results[1].toString() / 10**6)
     $("#last_epoch").html(results[2].LastModifiedEpoch.toString())
     $("#last_time").html(results[2].LastModifiedTime.toString())
-    $("#acc_amount_time").html(results[2].AccAmountTime.toString())
+    // $("#acc_amount_time").html(results[2].AccAmountTime.toString())
 }
 
 async function mintToSelf(){
@@ -116,9 +118,10 @@ async function startNewEpoch(){
 }
 
 async function fetch_data(url){
+    console.log(url)
     let raw = await fetch(url)
     let data = await raw.json()
-    return data.data
+    return data.blocks
 }
 
 
@@ -129,7 +132,7 @@ async function query_dmo(){
     if(date_tight.length == 0){
         return
     }
-    let base_url = "https://chain.api.btc.com/v3/block/date/"
+    let base_url = "https://mappingfunk.io/btc/block/query/"
     //https://chain.api.btc.com/v3/block/date/20211128
     let full_url = base_url + date_tight
     let raw_blocks = await fetch_data(full_url)
