@@ -187,9 +187,8 @@ function blockAnalysis(blocks, startTime){
 function _innerAnalysis(blocks, start, end){
     let total_block_reward = blocks.map(x=>x.reward_block).reduce((a,b)=>a+b, 0)
     let total_block_fees = blocks.map(x=>x.reward_fees).reduce((a,b)=>a+b, 0)
-    let period = end - start
     //avg, ratio, time
-    return [start, end, blocks[0].difficulty, total_block_fees / total_block_reward, blocks[0].reward_block]
+    return [start, end, blocks[0].difficulty, total_block_fees / total_block_reward, total_block_reward / blocks.length, total_block_fees / blocks.length]
 }
 
 function _calculateDMO(analysises){
@@ -198,9 +197,9 @@ function _calculateDMO(analysises){
         let T = 1000 ** 4
         let seconds = x[1] - x[0]
         let difficulty = x[2]
-        let reward = x[4]
-        let ratio = x[3]
-        dmo += T * seconds * reward / difficulty / 2**32 * 0.96 // 4% pool fee 
+        let avg_reward = x[4]
+        let avg_fee = x[5]
+        dmo += T * seconds * (avg_reward + avg_fee) / difficulty / 2**32 * 0.96 // 4% pool fee 
     })
     return dmo
 }
