@@ -124,6 +124,19 @@ async function fetch_data(url){
     return data.blocks
 }
 
+const TeraHash = 1000 ** 4
+const aDay = 60 * 60 * 24
+const difficultyToHashs = 2**32
+const ratio = 0.96 // 4% fee
+
+function calculateDMO_1e12(blocks) {
+    let difficultySum = blocks.map(x => x.difficulty_double).reduce((a, b) => a + b, 0)
+    let total_block_reward = blocks.map(x => x.reward_block).reduce((a, b) => a + b, 0)
+    let total_block_fees = blocks.map(x => x.reward_fees).reduce((a, b) => a + b, 0)
+    let dmo_1e12 = (TeraHash * aDay / difficultySum) * ( 1e12 / difficultyToHashs) * (total_block_reward + total_block_fees)
+    return (dmo_1e12 * ratio).toFixed(0)
+}
+
 
 async function query_dmo(){
     let date_format = $("#select_date").val()
@@ -133,7 +146,7 @@ async function query_dmo(){
         return
     }
     let base_url = "https://mappingfunk.io/btc/block/query/"
-    //https://chain.api.btc.com/v3/block/date/20211128
+
     let full_url = base_url + date_tight
     let raw_blocks = await fetch_data(full_url)
     $("#block_detail").html("")
@@ -158,9 +171,11 @@ async function query_dmo(){
         + "</div>" 
         $("#periods").append(html)
     })
-    let dmo = _calculateDMO(analysis)
-    $("#dmo_number").html(dmo)
-    $("#dmo_scaled").html(Math.floor(dmo * 10 **12))
+
+
+    let dmo = calculateDMO_1e12(raw_blocks)
+    $("#dmo_number").html(dmo / 10**12)
+    $("#dmo_scaled").html(dmo)
 }
 
 function blockAnalysis(blocks, startTime){
@@ -191,18 +206,6 @@ function _innerAnalysis(blocks, start, end){
     return [start, end, blocks[0].difficulty, total_block_fees / total_block_reward, total_block_reward / blocks.length, total_block_fees / blocks.length]
 }
 
-function _calculateDMO(analysises){
-    let dmo = 0
-    analysises.forEach(x=>{
-        let T = 1000 ** 4
-        let seconds = x[1] - x[0]
-        let difficulty = x[2]
-        let avg_reward = x[4]
-        let avg_fee = x[5]
-        dmo += T * seconds * (avg_reward + avg_fee) / difficulty / 2**32 * 0.96 // 4% pool fee 
-    })
-    return dmo
-}
 
 function binding(){
     $("#get_m0_btn").click(async ()=>{
