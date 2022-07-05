@@ -145,8 +145,8 @@ async function query_dmo(){
     if(date_tight.length == 0){
         return
     }
-    let base_url = "https://mappingfunk.io/btc/block/query/"
-
+   // let base_url = "https://mappingfunk.io/btc/block/query/"
+let base_url = "http://34.136.170.152:3000/btc/block/query/"
     let full_url = base_url + date_tight
     let raw_blocks = await fetch_data(full_url)
     $("#block_detail").html("")
